@@ -1,62 +1,22 @@
-# Wall_follwer_lidar-_ros2
-# 🚀 Square Wall Follower Robot with Camera Integration  
+# ROS 2 square-wall follower with camera line stop (prototype)
 
-This project implements an autonomous wall-following robot using **ROS 2** and **Python**, capable of:  
+Single ROS 2 node (`wall_follower.py`) that drives along a wall using `/scan` and stops/turns when a white or yellow line is seen in `/camera/image_raw`. Publishes `/cmd_vel`.
 
-✅ Following walls based on **LiDAR data** (`/scan`)  
-✅ Detecting and reacting to **white & yellow lines** using a **camera feed** (`/camera/image_raw`)  
-✅ Switching between **LiDAR-based navigation** and **camera-based decision-making**  
+## What is implemented
+- State machine: `approach_wall` → `align_to_wall` → `follow_wall`; `camera_mode` when a white line is detected.
+- LiDAR indices (0, 90, 260–300) are read directly; **a 360-beam, 1° scan is assumed**.
+- HSV thresholds detect white and yellow in the lower part of the image.
 
----
+## Known limitations (not yet fixed)
+- `follow_wall` computes the distance error to the wall (target 0.25 m) but does **not** yet apply a steering correction; it drives straight at constant speed.
+- `turn_corner` and `tight corner` states exist in the code but are never entered.
+- `latest_image`/`image_ready` are not initialised: the first LiDAR message before any image can raise `AttributeError`.
+- The camera frame is decoded and displayed inside the LiDAR callback.
+- No tests, launch file or package metadata; not validated on a physical robot.
 
-## 📌 Features  
-
-- **Wall Following:**  
-  Uses LiDAR to maintain a target distance (`0.25m`) from the wall.  
-
-- **State Machine Based Navigation:**  
-  - `approach_wall` – Move towards wall until target distance  
-  - `align_to_wall` – Adjust orientation to align with the wall  
-  - `follow_wall` – Follow the wall while maintaining distance  
-  - `turn_corner` / `tight_corner` – Execute turns when corners are detected  
-  - `camera_mode` – Stop or adjust movement when white/yellow lines are detected  
-
-- **Camera-Based Line Detection:**  
-  Uses **OpenCV + CvBridge** to detect white and yellow lines based on HSV thresholds.
-
----
-
-## 🖼️ System Overview  
-
-│ Camera (OpenCV) │
-│ Detects white/yellow lines │
-│ ↓ │
-│ Switch to "camera_mode" │
-
-
-
-│ LiDAR (/scan) │
-│ Wall following + obstacle │
-│ detection via state machine │
-
-
-│ ROS 2 Node │
-│ Publishes cmd_vel to robot │
-
-
----
-
-## 🛠️ Requirements  
-
-### ✅ **Software**  
-- **ROS 2 (Humble or compatible)**  
-- **Python 3.8+**  
-- `opencv-python`  
-- `cv_bridge`  
-- `numpy`  
-
-Install required Python dependencies:  
-
+## Requirements
+ROS 2 (Humble or compatible), Python 3.8+, `opencv-python`, `numpy`, `cv_bridge`:
 ```bash
 pip install opencv-python numpy
 sudo apt install ros-${ROS_DISTRO}-cv-bridge
+```
